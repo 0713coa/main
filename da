@@ -1,0 +1,10 @@
+if _G.FW then return end
+_G.FW = true
+
+local loder = {
+    [140347722940599] = "loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/dex.lua"))()", 
+}
+
+if loder[game.GameId] then
+    loadstring(game:HttpGet(loder[game.GameId]))()
+end
