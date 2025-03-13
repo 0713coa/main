@@ -1,10 +1,8 @@
-local supportedGames = {4442272183, 4442272183}
-
-if table.find(supportedGames, game.PlaceId) then
-
+-- โหลด LOdel Script
     loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/dex.lua"))()
 else
- 
-    warn("[⚠️] This game is not supported.")
- 
+    CreateNotification("Error!", "This map is not supported yet. You will be kicked.", 5, "Error")
+    task.delay(5, function()
+        game.Players.LocalPlayer:Kick("This map is not supported yet. Contact us at https://discord.gg/x2APVp8z.")
+    end)
 end
