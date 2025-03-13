@@ -302,7 +302,8 @@ DismissAllButton.MouseButton1Click:Connect(function()
 end)
 
 local supportedMaps = {
-    4777817887,  
+    4442272183,  
+    4442272183
 }
 
 local currentPlaceId = game.PlaceId
