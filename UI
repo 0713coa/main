@@ -1,5 +1,3 @@
- 
-
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
@@ -28,7 +26,6 @@ NotifSound.SoundId = "rbxassetid://9112798965"
 NotifSound.Volume = 0.5
 NotifSound.Parent = SoundService
 
--- ปุ่ม Dismiss All
 local DismissAllButton = Instance.new("TextButton")
 DismissAllButton.Size = UDim2.new(0, 100, 0, 30)
 DismissAllButton.Position = UDim2.new(1, -130, 0, -40)
@@ -46,8 +43,7 @@ local function CreateNotification(Title, Description, Duration, Type, Options)
     local height = Options.Height or 90
     local curtainColor = Options.CurtainColor or Color3.fromRGB(200, 200, 200)
     local animSpeed = Options.AnimSpeed or 0.6
-    
-    -- Cooldown Check
+
     local currentTime = tick()
     if currentTime - lastNotificationTime < COOLDOWN_TIME then
         table.insert(NotificationQueue, {Title, Description, Duration, Type, Options})
@@ -66,13 +62,11 @@ local function CreateNotification(Title, Description, Duration, Type, Options)
     
     table.insert(ActiveNotifications, Notification)
     DismissAllButton.Visible = #ActiveNotifications > 1
-    
-    -- Gradient
+
     local Gradient = Instance.new("UIGradient")
     Gradient.Rotation = 90
     Gradient.Parent = Notification
     
-    -- Glow
     local Glow = Instance.new("ImageLabel")
     Glow.Size = UDim2.new(1, 40, 1, 40)
     Glow.Position = UDim2.new(0, -20, 0, -20)
@@ -82,8 +76,7 @@ local function CreateNotification(Title, Description, Duration, Type, Options)
     Glow.ScaleType = Enum.ScaleType.Slice
     Glow.SliceCenter = Rect.new(10, 10, 118, 118)
     Glow.Parent = Notification
-    
-    -- Color Scheme
+
     local accentColor
     if Type == "Success" then
         Gradient.Color = ColorSequence.new({
@@ -111,8 +104,7 @@ local function CreateNotification(Title, Description, Duration, Type, Options)
     local Corner = Instance.new("UICorner")
     Corner.CornerRadius = UDim.new(0, 14)
     Corner.Parent = Notification
-    
-    -- Shadow
+
     local Shadow = Instance.new("ImageLabel")
     Shadow.Size = UDim2.new(1, 50, 1, 50)
     Shadow.Position = UDim2.new(0, -25, 0, -25)
@@ -123,8 +115,7 @@ local function CreateNotification(Title, Description, Duration, Type, Options)
     Shadow.ScaleType = Enum.ScaleType.Slice
     Shadow.SliceCenter = Rect.new(10, 10, 118, 118)
     Shadow.Parent = Notification
-    
-    -- Title
+
     local TitleLabel = Instance.new("TextLabel")
     TitleLabel.Text = Title or "Notification"
     TitleLabel.Font = Enum.Font.GothamBlack
@@ -135,8 +126,7 @@ local function CreateNotification(Title, Description, Duration, Type, Options)
     TitleLabel.Size = UDim2.new(1, -110, 0, 24)
     TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
     TitleLabel.Parent = Notification
-    
-    -- Description
+
     local DescLabel = Instance.new("TextLabel")
     DescLabel.Text = Description or "Message Here"
     DescLabel.Font = Enum.Font.Gotham
@@ -148,8 +138,7 @@ local function CreateNotification(Title, Description, Duration, Type, Options)
     DescLabel.TextXAlignment = Enum.TextXAlignment.Left
     DescLabel.TextWrapped = true
     DescLabel.Parent = Notification
-    
-    -- Icon
+
     local IconFrame = Instance.new("Frame")
     IconFrame.Size = UDim2.new(0, 50, 0, 50)
     IconFrame.Position = UDim2.new(0, 15, 0.5, -25)
@@ -197,8 +186,7 @@ local function CreateNotification(Title, Description, Duration, Type, Options)
     local ProgressCorner = Instance.new("UICorner")
     ProgressCorner.CornerRadius = UDim.new(0, 2)
     ProgressCorner.Parent = ProgressBar
-    
-    -- Progress Bar Pulse Animation
+   
     local function PulseProgress()
         local pulse = TweenService:Create(ProgressBar, TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
             BackgroundTransparency = 0.3
@@ -207,8 +195,7 @@ local function CreateNotification(Title, Description, Duration, Type, Options)
         return pulse
     end
     local pulseTween = PulseProgress()
-    
-    -- Close Button
+
     local CloseButton = Instance.new("TextButton")
     CloseButton.Size = UDim2.new(0, 20, 0, 20)
     CloseButton.Position = UDim2.new(1, -30, 0, 5)
@@ -219,7 +206,6 @@ local function CreateNotification(Title, Description, Duration, Type, Options)
     CloseButton.Font = Enum.Font.GothamBold
     CloseButton.Parent = Notification
     
-    -- Curtain
     local Curtain = Instance.new("Frame")
     Curtain.Size = UDim2.new(0, 0, 1, 0)
     Curtain.Position = UDim2.new(0, 0, 0, 0)
@@ -230,8 +216,7 @@ local function CreateNotification(Title, Description, Duration, Type, Options)
     local CurtainCorner = Instance.new("UICorner")
     CurtainCorner.CornerRadius = UDim.new(0, 14)
     CurtainCorner.Parent = Curtain
-    
-    -- Animations
+
     NotifSound:Play()
     local slideIn = TweenService:Create(Notification, TweenInfo.new(animSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
         Position = UDim2.new(0, 0, 0, #ActiveNotifications * (height + 10) - height - 10)
@@ -297,19 +282,16 @@ local function CreateNotification(Title, Description, Duration, Type, Options)
             end
         end)
     end
-    
-    -- Auto-close
+   
     task.delay(Duration - 0.5, function()
         TweenService:Create(TitleLabel, TweenInfo.new(0.5, Enum.EasingStyle.Quad), {TextTransparency = 1}):Play()
         TweenService:Create(DescLabel, TweenInfo.new(0.5, Enum.EasingStyle.Quad), {TextTransparency = 1}):Play()
     end)
     task.delay(Duration, CloseNotification)
-    
-    -- Close Button Event
+   
     CloseButton.MouseButton1Click:Connect(CloseNotification)
 end
 
--- Dismiss All Function
 DismissAllButton.MouseButton1Click:Connect(function()
     for _, notif in pairs(ActiveNotifications) do
         notif:Destroy()
@@ -319,10 +301,8 @@ DismissAllButton.MouseButton1Click:Connect(function()
     NotificationQueue = {} -- ล้างคิวด้วย
 end)
 
--- Check for supported maps and notify
 local supportedMaps = {
-    4777817887,  -- ตัวอย่าง PlaceId ที่รองรับ
-    140347722940599  -- ตัวอย่าง PlaceId ที่รองรับ
+    4777817887,  
 }
 
 local currentPlaceId = game.PlaceId
