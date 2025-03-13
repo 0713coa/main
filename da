@@ -1,10 +1,10 @@
-if _G.FW then return end
-_G.FW = true
+local supportedGames = {7666406167, 4442272183, 7449423635, 142940599}
 
-local loder = {
-    [140347722940599] = "loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/dex.lua"))()", 
-}
+if table.find(supportedGames, game.PlaceId) then
 
-if loder[game.GameId] then
-    loadstring(game:HttpGet(loder[game.GameId]))()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/dex.lua"))()
+else
+ 
+    warn("[⚠️] This game is not supported.")
+ 
 end
