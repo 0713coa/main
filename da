@@ -1,4 +1,4 @@
-local supportedGames = {7666406167, 4442272183, 7449423635, 142940599}
+local supportedGames = {7666406167, 4442272183, 7449423635, 140347722940599}
 
 if table.find(supportedGames, game.PlaceId) then
 
