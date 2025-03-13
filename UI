@@ -1,0 +1,344 @@
+ 
+
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local Player = Players.LocalPlayer
+local SoundService = game:GetService("SoundService")
+
+local NotifGui = Instance.new("ScreenGui")
+NotifGui.Name = "ModernNotif"
+NotifGui.Parent = RunService:IsStudio() and Player.PlayerGui or game:GetService("CoreGui")
+NotifGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+local Container = Instance.new("Frame")
+Container.Name = "Container"
+Container.Position = UDim2.new(1, -380, 0, 20) -- ขวาบน
+Container.Size = UDim2.new(0, 360, 0, 0)
+Container.BackgroundTransparency = 1
+Container.Parent = NotifGui
+
+local ActiveNotifications = {}
+local NotificationQueue = {}
+local lastNotificationTime = 0
+local COOLDOWN_TIME = 1
+
+local NotifSound = Instance.new("Sound")
+NotifSound.SoundId = "rbxassetid://9112798965"
+NotifSound.Volume = 0.5
+NotifSound.Parent = SoundService
+
+-- ปุ่ม Dismiss All
+local DismissAllButton = Instance.new("TextButton")
+DismissAllButton.Size = UDim2.new(0, 100, 0, 30)
+DismissAllButton.Position = UDim2.new(1, -130, 0, -40)
+DismissAllButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+DismissAllButton.Text = "Dismiss All"
+DismissAllButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+DismissAllButton.TextSize = 14
+DismissAllButton.Font = Enum.Font.Gotham
+DismissAllButton.Parent = Container
+DismissAllButton.Visible = false
+
+local function CreateNotification(Title, Description, Duration, Type, Options)
+    Options = Options or {}
+    local width = Options.Width or 360
+    local height = Options.Height or 90
+    local curtainColor = Options.CurtainColor or Color3.fromRGB(200, 200, 200)
+    local animSpeed = Options.AnimSpeed or 0.6
+    
+    -- Cooldown Check
+    local currentTime = tick()
+    if currentTime - lastNotificationTime < COOLDOWN_TIME then
+        table.insert(NotificationQueue, {Title, Description, Duration, Type, Options})
+        return
+    end
+    
+    lastNotificationTime = currentTime
+    
+    local Notification = Instance.new("Frame")
+    Notification.Size = UDim2.new(0, width, 0, height)
+    Notification.BackgroundTransparency = 0.05
+    Notification.BorderSizePixel = 0
+    Notification.Position = UDim2.new(1, 0, 0, #ActiveNotifications * (height + 10))
+    Notification.ClipsDescendants = true
+    Notification.Parent = Container
+    
+    table.insert(ActiveNotifications, Notification)
+    DismissAllButton.Visible = #ActiveNotifications > 1
+    
+    -- Gradient
+    local Gradient = Instance.new("UIGradient")
+    Gradient.Rotation = 90
+    Gradient.Parent = Notification
+    
+    -- Glow
+    local Glow = Instance.new("ImageLabel")
+    Glow.Size = UDim2.new(1, 40, 1, 40)
+    Glow.Position = UDim2.new(0, -20, 0, -20)
+    Glow.BackgroundTransparency = 1
+    Glow.Image = "rbxassetid://6523441933"
+    Glow.ImageTransparency = 0.7
+    Glow.ScaleType = Enum.ScaleType.Slice
+    Glow.SliceCenter = Rect.new(10, 10, 118, 118)
+    Glow.Parent = Notification
+    
+    -- Color Scheme
+    local accentColor
+    if Type == "Success" then
+        Gradient.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(46, 204, 113)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(26, 147, 83))
+        })
+        Glow.ImageColor3 = Color3.fromRGB(46, 204, 113)
+        accentColor = Color3.fromRGB(46, 204, 113)
+    elseif Type == "Warning" then
+        Gradient.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(241, 196, 15)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(192, 151, 12))
+        })
+        Glow.ImageColor3 = Color3.fromRGB(241, 196, 15)
+        accentColor = Color3.fromRGB(241, 196, 15)
+    else -- Error
+        Gradient.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(231, 76, 60)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(169, 50, 38))
+        })
+        Glow.ImageColor3 = Color3.fromRGB(231, 76, 60)
+        accentColor = Color3.fromRGB(231, 76, 60)
+    end
+    
+    local Corner = Instance.new("UICorner")
+    Corner.CornerRadius = UDim.new(0, 14)
+    Corner.Parent = Notification
+    
+    -- Shadow
+    local Shadow = Instance.new("ImageLabel")
+    Shadow.Size = UDim2.new(1, 50, 1, 50)
+    Shadow.Position = UDim2.new(0, -25, 0, -25)
+    Shadow.BackgroundTransparency = 1
+    Shadow.Image = "rbxassetid://6014261993"
+    Shadow.ImageTransparency = 0.85
+    Shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+    Shadow.ScaleType = Enum.ScaleType.Slice
+    Shadow.SliceCenter = Rect.new(10, 10, 118, 118)
+    Shadow.Parent = Notification
+    
+    -- Title
+    local TitleLabel = Instance.new("TextLabel")
+    TitleLabel.Text = Title or "Notification"
+    TitleLabel.Font = Enum.Font.GothamBlack
+    TitleLabel.TextSize = 20
+    TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TitleLabel.BackgroundTransparency = 1
+    TitleLabel.Position = UDim2.new(0, 80, 0, 15)
+    TitleLabel.Size = UDim2.new(1, -110, 0, 24)
+    TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    TitleLabel.Parent = Notification
+    
+    -- Description
+    local DescLabel = Instance.new("TextLabel")
+    DescLabel.Text = Description or "Message Here"
+    DescLabel.Font = Enum.Font.Gotham
+    DescLabel.TextSize = 15
+    DescLabel.TextColor3 = Color3.fromRGB(240, 240, 240)
+    DescLabel.BackgroundTransparency = 1
+    DescLabel.Position = UDim2.new(0, 80, 0, 40)
+    DescLabel.Size = UDim2.new(1, -90, 0, 40)
+    DescLabel.TextXAlignment = Enum.TextXAlignment.Left
+    DescLabel.TextWrapped = true
+    DescLabel.Parent = Notification
+    
+    -- Icon
+    local IconFrame = Instance.new("Frame")
+    IconFrame.Size = UDim2.new(0, 50, 0, 50)
+    IconFrame.Position = UDim2.new(0, 15, 0.5, -25)
+    IconFrame.BackgroundTransparency = 1
+    IconFrame.Parent = Notification
+    
+    local Icon = Instance.new("ImageLabel")
+    Icon.Size = UDim2.new(0, 40, 0, 40)
+    Icon.Position = UDim2.new(0.5, -20, 0.5, -20)
+    Icon.BackgroundTransparency = 1
+    Icon.ImageColor3 = Color3.fromRGB(255, 255, 255)
+    Icon.Parent = IconFrame
+    
+    local IconGlow = Instance.new("ImageLabel")
+    IconGlow.Size = UDim2.new(1, 20, 1, 20)
+    IconGlow.Position = UDim2.new(0, -10, 0, -10)
+    IconGlow.BackgroundTransparency = 1
+    IconGlow.Image = "rbxassetid://6523441933"
+    IconGlow.ImageTransparency = 0.8
+    IconGlow.ImageColor3 = accentColor
+    IconGlow.Parent = IconFrame
+    
+    if Type == "Success" then
+        Icon.Image = "rbxassetid://7072706620"
+    elseif Type == "Warning" then
+        Icon.Image = "rbxassetid://7072723488"
+    else -- Error
+        Icon.Image = "rbxassetid://7072719338"
+    end
+    
+    -- Progress Bar with Animation
+    local ProgressBar = Instance.new("Frame")
+    ProgressBar.Size = UDim2.new(1, 0, 0, 3)
+    ProgressBar.Position = UDim2.new(0, 0, 1, -3)
+    ProgressBar.BackgroundTransparency = 0
+    ProgressBar.Parent = Notification
+    
+    local ProgressGradient = Instance.new("UIGradient")
+    ProgressGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, accentColor),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 255))
+    })
+    ProgressGradient.Parent = ProgressBar
+    
+    local ProgressCorner = Instance.new("UICorner")
+    ProgressCorner.CornerRadius = UDim.new(0, 2)
+    ProgressCorner.Parent = ProgressBar
+    
+    -- Progress Bar Pulse Animation
+    local function PulseProgress()
+        local pulse = TweenService:Create(ProgressBar, TweenInfo.new(0.8, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {
+            BackgroundTransparency = 0.3
+        })
+        pulse:Play()
+        return pulse
+    end
+    local pulseTween = PulseProgress()
+    
+    -- Close Button
+    local CloseButton = Instance.new("TextButton")
+    CloseButton.Size = UDim2.new(0, 20, 0, 20)
+    CloseButton.Position = UDim2.new(1, -30, 0, 5)
+    CloseButton.BackgroundTransparency = 1
+    CloseButton.Text = "X"
+    CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    CloseButton.TextSize = 16
+    CloseButton.Font = Enum.Font.GothamBold
+    CloseButton.Parent = Notification
+    
+    -- Curtain
+    local Curtain = Instance.new("Frame")
+    Curtain.Size = UDim2.new(0, 0, 1, 0)
+    Curtain.Position = UDim2.new(0, 0, 0, 0)
+    Curtain.BackgroundColor3 = curtainColor
+    Curtain.BackgroundTransparency = 0.2
+    Curtain.BorderSizePixel = 0
+    Curtain.Parent = Notification
+    local CurtainCorner = Instance.new("UICorner")
+    CurtainCorner.CornerRadius = UDim.new(0, 14)
+    CurtainCorner.Parent = Curtain
+    
+    -- Animations
+    NotifSound:Play()
+    local slideIn = TweenService:Create(Notification, TweenInfo.new(animSpeed, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
+        Position = UDim2.new(0, 0, 0, #ActiveNotifications * (height + 10) - height - 10)
+    })
+    local fadeIn = TweenService:Create(Notification, TweenInfo.new(animSpeed, Enum.EasingStyle.Quad), {
+        BackgroundTransparency = 0
+    })
+    local glowFade = TweenService:Create(Glow, TweenInfo.new(animSpeed + 0.2, Enum.EasingStyle.Quad), {
+        ImageTransparency = 0.6
+    })
+    local barTween = TweenService:Create(ProgressBar, TweenInfo.new(Duration, Enum.EasingStyle.Linear), {
+        Size = UDim2.new(0, 0, 0, 3)
+    })
+    
+    slideIn:Play()
+    fadeIn:Play()
+    glowFade:Play()
+    barTween:Play()
+    
+    local function CloseNotification()
+        pulseTween:Cancel() -- หยุด Pulse Animation
+        local textFade = TweenService:Create(TitleLabel, TweenInfo.new(0.5, Enum.EasingStyle.Quad), {TextTransparency = 1})
+        local descFade = TweenService:Create(DescLabel, TweenInfo.new(0.5, Enum.EasingStyle.Quad), {TextTransparency = 1})
+        textFade:Play()
+        descFade:Play()
+        textFade.Completed:Wait()
+        
+        local curtainTween = TweenService:Create(Curtain, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Size = UDim2.new(1, 0, 1, 0)
+        })
+        curtainTween:Play()
+        curtainTween.Completed:Wait()
+        
+        local slideOut = TweenService:Create(Notification, TweenInfo.new(0.5, Enum.EasingStyle.Exponential, Enum.EasingDirection.In), {
+            Position = UDim2.new(1, 0, 0, Notification.Position.Y.Offset)
+        })
+        local fadeOut = TweenService:Create(Notification, TweenInfo.new(0.5, Enum.EasingStyle.Quad), {
+            BackgroundTransparency = 1
+        })
+        local glowOut = TweenService:Create(Glow, TweenInfo.new(0.5, Enum.EasingStyle.Quad), {
+            ImageTransparency = 0.9
+        })
+        slideOut:Play()
+        fadeOut:Play()
+        glowOut:Play()
+        slideOut.Completed:Connect(function()
+            for i, notif in pairs(ActiveNotifications) do
+                if notif == Notification then
+                    table.remove(ActiveNotifications, i)
+                    break
+                end
+            end
+            Notification:Destroy()
+            DismissAllButton.Visible = #ActiveNotifications > 1
+            for i, notif in pairs(ActiveNotifications) do
+                TweenService:Create(notif, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
+                    Position = UDim2.new(0, 0, 0, (i - 1) * (height + 10))
+                }):Play()
+            end
+            if #NotificationQueue > 0 then
+                local nextNotif = table.remove(NotificationQueue, 1)
+                CreateNotification(nextNotif[1], nextNotif[2], nextNotif[3], nextNotif[4], nextNotif[5])
+            end
+        end)
+    end
+    
+    -- Auto-close
+    task.delay(Duration - 0.5, function()
+        TweenService:Create(TitleLabel, TweenInfo.new(0.5, Enum.EasingStyle.Quad), {TextTransparency = 1}):Play()
+        TweenService:Create(DescLabel, TweenInfo.new(0.5, Enum.EasingStyle.Quad), {TextTransparency = 1}):Play()
+    end)
+    task.delay(Duration, CloseNotification)
+    
+    -- Close Button Event
+    CloseButton.MouseButton1Click:Connect(CloseNotification)
+end
+
+-- Dismiss All Function
+DismissAllButton.MouseButton1Click:Connect(function()
+    for _, notif in pairs(ActiveNotifications) do
+        notif:Destroy()
+    end
+    ActiveNotifications = {}
+    DismissAllButton.Visible = false
+    NotificationQueue = {} -- ล้างคิวด้วย
+end)
+
+-- Check for supported maps and notify
+local supportedMaps = {
+    4777817887,  -- ตัวอย่าง PlaceId ที่รองรับ
+    140347722940599  -- ตัวอย่าง PlaceId ที่รองรับ
+}
+
+local currentPlaceId = game.PlaceId
+local isSupported = false
+
+for _, id in pairs(supportedMaps) do
+    if currentPlaceId == id then
+        isSupported = true
+        break
+    end
+end
+
+if isSupported then
+    CreateNotification("Success!", "This map is fully supported.", 5, "Success")
+else
+    CreateNotification("Error!", "This map is not supported yet. You will be kicked.", 5, "Error")
+
+    game.Players.LocalPlayer:Kick("This map is not supported yet. Contact us at https://discord.gg/x2APVp8z.")
+end
