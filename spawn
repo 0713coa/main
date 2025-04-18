@@ -1,0 +1,25 @@
+local Players = game:GetService("Players")
+local GuiService = game:GetService("GuiService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGUI = LocalPlayer:WaitForChild("PlayerGui")
+
+local function ClickRainUI()
+    local button = PlayerGUI:FindFirstChild("RainUI") and PlayerGUI.RainUI:FindFirstChild("Start")
+
+    if button and (button:IsA("TextButton") or button:IsA("ImageButton")) and button.Visible then
+        GuiService.SelectedObject = button
+        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Return, false, game)
+        task.wait(0.1)
+        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Return, false, game)
+
+        task.wait(0.5)
+        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.BackSlash, false, game)
+        task.wait(0.1)
+        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.BackSlash, false, game)
+
+        task.wait(29)
+    end
+end
+
+ClickRainUI()
